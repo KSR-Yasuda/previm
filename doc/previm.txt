@@ -4,7 +4,7 @@ Version: 2.0
 Author: kanno <akapanna@gmail.com>
 Maintainer: previm developers
 
-==============================================================================
+
 CONTENTS						*previm-contents*
 
 Introduction						|previm-introduction|
@@ -18,7 +18,7 @@ Using with open-browser.vim				|previm-openbrowser|
 Changelog						|previm-changelog|
 
 
-==============================================================================
+
 INTRODUCTION						*previm-introduction*
 
 This plugin provides the functionality of displaying file previews on
@@ -33,7 +33,7 @@ Latest revision:
 http://github.com/previm/previm
 
 
-==============================================================================
+
 DEPENDENCIES						*previm-depends*
 
 [Required]
@@ -43,7 +43,7 @@ DEPENDENCIES						*previm-depends*
 	- open-browser.vim(https://github.com/tyru/open-browser.vim)
 
 
-==============================================================================
+
 USAGE							*previm-usage*
 
 This is an example of the case of markdown.
@@ -56,7 +56,7 @@ open-browser.vim.
 4. Go back to the buffer and edit some more.
 5. Changes are reflected on the page shown in the browser each update.
 
-==============================================================================
+
 COMMANDS						*previm-command*
 
 							*:PrevimOpen*
@@ -72,7 +72,7 @@ COMMANDS						*previm-command*
 	Force a refresh of the preview.
 
 
-==============================================================================
+
 FUNCTIONS						*previm-functions*
 
 previm#open({path})					*previm#open()*
@@ -83,7 +83,7 @@ previm#refresh()					*previm#refresh()*
 	the page shown in the browser.
 
 
-==============================================================================
+
 SETTINGS						*previm-settings*
 
 
@@ -103,6 +103,34 @@ g:previm_open_cmd					*g:previm_open_cmd*
         # open with Google Chrome
         let g:previm_open_cmd = 'open -a Google\ Chrome'
 <
+
+g:previm_url_path_mappings			*g:previm_url_path_mappings*
+b:previm_url_path_mappings			*b:previm_url_path_mappings*
+	Type:Dictionary
+
+	Specify URL path mappings for root-relative links in Markdown.
+	Buffer-local |b:previm_url_path_mappings| takes precedence over
+	|g:previm_url_path_mappings|.
+
+	The dictionary key is a root-relative URL prefix. The value is a local
+	path prefix. The following placeholders are supported in the local path:
+
+	  {gitroot}	The nearest Git repository root for the current buffer.
+	  {cwd}		Vim's current working directory.
+	  {filedir}	The current buffer's directory.
+>
+	" .vimrc
+	let g:previm_url_path_mappings = {
+	\  '/images/': '{gitroot}/images/',
+	\  '/assets/': '{cwd}/public/assets/',
+	\}
+<
+	For example, with the above setting, a Markdown image link such as
+	/images/example.png is previewed from {gitroot}/images/example.png when
+	the target file exists.
+
+	If no mapping matches, a placeholder cannot be resolved, or the target
+	file does not exist, Previm keeps the existing path handling.
 
 g:previm_wsl_open_path_format			*g:previm_wsl_open_path_format*
 	Type:String
@@ -260,7 +288,7 @@ g:previm_code_language_separator		*g:previm_code_language_separator*
 	let g:previm_code_language_separator = '[\s:]+'
 
 
-==============================================================================
+
 USING EXTRA LIBRARIES					*previm-extralibraries*
 
 You can add extra libraries for preview: >
@@ -286,7 +314,7 @@ You can add extra libraries for preview: >
 <
 Adding this into your vimrc, and |:PrevimUpdateAssets| after opening markdown file.
 
-==============================================================================
+
 USING WITH OPEN-BROWSER.VIM				*previm-openbrowser*
 
 The following steps are taken for choosing which browser to display the
@@ -301,7 +329,7 @@ preview on.
 
 Thus, |g:previm_open_cmd| need not be configured when using open-browser.vim.
 
-==============================================================================
+
 CHANGELOG						*previm-changelog*
 
 2.0  	2023-09-20
