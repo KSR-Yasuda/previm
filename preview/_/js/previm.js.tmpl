@@ -79,7 +79,7 @@
     if(hasTargetFileType(filetype, ['markdown', 'mkd'])) {
       content = content
         .replace(/^---\s*\n((?:[^\n]+\n)*)---\s*\n/, '```yaml\n$1```\n')
-        .replace(/^\+\+\+\s*\n((?:[^\n]+\n)*)\-\-\-\s*\n/, '```toml\n$1```\n');
+        .replace(/^\+\+\+\s*\n((?:[^\n]+\n)*)\+\+\+\s*\n/, '```toml\n$1```\n');
       if (typeof getOptions === 'function' && getOptions().hardLineBreak) {
         md.set({ breaks: true });
         md.disable('cjk_breaks');
@@ -117,6 +117,41 @@
       return new Asciidoctor().convert(content, { attributes: { showtitle: true } });
     }
     return 'Sorry. It is a filetype(' + filetype + ') that is not support<br /><br />' + content;
+  }
+
+  function normalizeBaseUrl(baseUrl) {
+    if (/^\/\//.test(baseUrl)) {
+      return _win.location.protocol + baseUrl;
+    }
+    return baseUrl;
+  }
+
+  function isRelativeUrl(url) {
+    return !/^(?:[a-z][a-z0-9+.-]*:|\/\/|#|\/)/i.test(url);
+  }
+
+  function resolveRelativeImageSrcs(container) {
+    if (typeof getOptions !== 'function') {
+      return;
+    }
+    const options = getOptions();
+    if (!options || !options.baseUrl) {
+      return;
+    }
+    const baseUrl = normalizeBaseUrl(options.baseUrl);
+    const imgs = container.querySelectorAll('img[src]');
+    imgs.forEach(function(img) {
+      const src = img.getAttribute('src');
+      if (!src || !isRelativeUrl(src)) {
+        return;
+      }
+      try {
+        const resolved = new URL(src, baseUrl).toString();
+        img.setAttribute('src', resolved);
+      } catch (_e) {
+        // ignore invalid URLs
+      }
+    });
   }
 
   function hasTargetFileType(filetype, targetList) {
@@ -175,6 +210,7 @@
 
       const beforePageYOffset = _win.pageYOffset;
       _doc.getElementById('preview').innerHTML = transform(getFileType(), getContent());
+      resolveRelativeImageSrcs(_doc.getElementById('preview'));
 
       {{previm_load_libraries}}
 
@@ -198,6 +234,7 @@
     }
   }
 
+  let isFirstLoad = true;
   const interval = _win.setInterval(function() {
     const script = _doc.createElement('script');
 
@@ -219,7 +256,25 @@
 
     _doc.getElementsByTagName('head')[0].appendChild(script);
 
+    if (isFirstLoad) {
+      _addEventListener(script, 'load', function() {
+        const scrollPosMatch = _win.location.hash.match(/^#scroll=(\d+),(\d+)$/);
+        if (scrollPosMatch != null) {
+          const x = parseInt(scrollPosMatch[1], 10);
+          const y = parseInt(scrollPosMatch[2], 10);
+          _win.setTimeout(function() {
+            _win.scrollTo(x, y);
+          }, 300);
+        }
+      });
+      isFirstLoad = false;
+    }
+
   }, REFRESH_INTERVAL);
+
+  _addEventListener(_doc, 'scrollend', function() {
+    _win.location.replace(_win.location.href.replace(/(#.*)?$/, '#scroll=' + _win.scrollX + ',' + _win.scrollY));
+  });
 
   function _addEventListener(target, type, listener) {
     if (target.addEventListener) {

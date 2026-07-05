@@ -4,7 +4,7 @@ Version: 2.0
 Author: kanno <akapanna@gmail.com>
 Maintainer: previm developers
 
-==============================================================================
+
 CONTENTS						*previm-contents*
 
 Introduction						|previm-introduction|
@@ -18,7 +18,7 @@ Using with open-browser.vim				|previm-openbrowser|
 Changelog						|previm-changelog|
 
 
-==============================================================================
+
 INTRODUCTION						*previm-introduction*
 
 This plugin provides the functionality of displaying file previews on
@@ -33,7 +33,7 @@ Latest revision:
 http://github.com/previm/previm
 
 
-==============================================================================
+
 DEPENDENCIES						*previm-depends*
 
 [Required]
@@ -43,7 +43,7 @@ DEPENDENCIES						*previm-depends*
 	- open-browser.vim(https://github.com/tyru/open-browser.vim)
 
 
-==============================================================================
+
 USAGE							*previm-usage*
 
 This is an example of the case of markdown.
@@ -56,7 +56,7 @@ open-browser.vim.
 4. Go back to the buffer and edit some more.
 5. Changes are reflected on the page shown in the browser each update.
 
-==============================================================================
+
 COMMANDS						*previm-command*
 
 							*:PrevimOpen*
@@ -72,7 +72,7 @@ COMMANDS						*previm-command*
 	Force a refresh of the preview.
 
 
-==============================================================================
+
 FUNCTIONS						*previm-functions*
 
 previm#open({path})					*previm#open()*
@@ -83,7 +83,7 @@ previm#refresh()					*previm#refresh()*
 	the page shown in the browser.
 
 
-==============================================================================
+
 SETTINGS						*previm-settings*
 
 
@@ -131,6 +131,25 @@ b:previm_url_path_mappings			*b:previm_url_path_mappings*
 
 	If no mapping matches, a placeholder cannot be resolved, or the target
 	file does not exist, Previm keeps the existing path handling.
+
+g:previm_wsl_open_path_format			*g:previm_wsl_open_path_format*
+	Type:String
+
+	Specify the preview HTML path format passed to |g:previm_open_cmd| when
+	|g:previm_wsl_mode| is 1.
+
+	Supported values are:
+	  windows	Convert the preview HTML path with wslpath -w and pass it
+			as a Windows file:/// URL. This is the default and preserves
+			the previous behavior.
+	  wsl		Pass the preview HTML path as a WSL path. Use this when
+			|g:previm_open_cmd| is wslview.
+>
+	" .vimrc
+	let g:previm_wsl_mode = 1
+	let g:previm_open_cmd = 'wslview'
+	let g:previm_wsl_open_path_format = 'wsl'
+<
 
 g:previm_enable_realtime			*g:previm_enable_realtime*
 	Type:Num
@@ -269,7 +288,7 @@ g:previm_code_language_separator		*g:previm_code_language_separator*
 	let g:previm_code_language_separator = '[\s:]+'
 
 
-==============================================================================
+
 USING EXTRA LIBRARIES					*previm-extralibraries*
 
 You can add extra libraries for preview: >
@@ -295,7 +314,7 @@ You can add extra libraries for preview: >
 <
 Adding this into your vimrc, and |:PrevimUpdateAssets| after opening markdown file.
 
-==============================================================================
+
 USING WITH OPEN-BROWSER.VIM				*previm-openbrowser*
 
 The following steps are taken for choosing which browser to display the
@@ -310,7 +329,7 @@ preview on.
 
 Thus, |g:previm_open_cmd| need not be configured when using open-browser.vim.
 
-==============================================================================
+
 CHANGELOG						*previm-changelog*
 
 2.0  	2023-09-20

@@ -17,8 +17,7 @@ function! previm#open(preview_html_file) abort
     elseif has('win32unix')
       call s:system(g:previm_open_cmd . ' '''  . system('cygpath -w ' . a:preview_html_file) . '''')
     elseif get(g:, 'previm_wsl_mode', 0) ==# 1
-      let wsl_file_path = trim(system('wslpath -w ' . a:preview_html_file), "\r\n", 2)
-      call s:system(g:previm_open_cmd . " 'file:///" . fnamemodify(wsl_file_path, ':gs?\\?\/?') . '''')
+      call s:system(g:previm_open_cmd . " '" . previm#wsl_open_path(a:preview_html_file) . '''')
     elseif has('win32')
       call s:system(g:previm_open_cmd . ' "'  . a:preview_html_file . '"')
     else
@@ -42,6 +41,17 @@ function! previm#open(preview_html_file) abort
     au!
     au VimLeave * call previm#wipe_cache_for_self()
   augroup END
+endfunction
+
+function! previm#wsl_open_path(preview_html_file, ...) abort
+  if get(g:, 'previm_wsl_open_path_format', 'windows') ==# 'wsl'
+    return a:preview_html_file
+  endif
+
+  let wsl_file_path = a:0 > 0
+        \ ? a:1
+        \ : trim(system('wslpath -w ' . a:preview_html_file), "\r\n", 2)
+  return 'file:///' . fnamemodify(wsl_file_path, ':gs?\\?\/?')
 endfunction
 
 function! s:exists_openbrowser() abort
@@ -228,7 +238,7 @@ function! s:function_template() abort
   let current_file = expand('%:p')
   return join([
       \ 'function getFileName() {',
-      \ printf('return "%s";', s:escape_backslash(current_file)),
+      \ printf('return "%s";', substitute(s:escape_backslash(current_file), '"', '\\"', 'g')),
       \ '}',
       \ '',
       \ 'function getFileType() {',
@@ -317,7 +327,7 @@ function! previm#convert_to_content(lines) abort
   " コードブロック内ではパスの展開は行わない
   let in_codeblock = 0
   for line in s:do_external_parse(a:lines)
-    if line =~ '^```'
+    if line =~ '^\(```\|\~\~\~\)'
       let in_codeblock = !in_codeblock
     endif
 
@@ -331,6 +341,30 @@ function! previm#convert_to_content(lines) abort
     call add(converted_lines, escaped)
   endfor
   return join(converted_lines, "\\n")
+endfunction
+
+function! previm#base_url() abort
+  let mkd_dir = expand('%:p:h')
+  if has('win32unix')
+    " convert cygwin path to windows path
+    let mkd_dir = substitute(system('cygpath -wa ' . mkd_dir), "\n$", '', '')
+    let mkd_dir = substitute(mkd_dir, '\', '/', 'g')
+  elseif get(g:, 'previm_wsl_mode', 0) ==# 1
+    let mkd_dir = trim(system('wslpath -w ' . mkd_dir))
+    let mkd_dir = substitute(mkd_dir, '\', '/', 'g')
+  elseif has('win32')
+    let mkd_dir = substitute(mkd_dir, '\', '/', 'g')
+  endif
+  let path_prefix = '//localhost'
+  if get(g:, 'previm_wsl_mode', 0) ==# 1
+    let path_prefix = ''
+  endif
+  let pre_slash = s:start_with(mkd_dir, '/') ? '' : '/'
+  let base_url = path_prefix . pre_slash . mkd_dir
+  if base_url !~# '/$'
+    let base_url .= '/'
+  endif
+  return base_url
 endfunction
 
 function! previm#convert_relative_to_absolute_filepath(text, mkd_dir) abort
@@ -569,6 +603,7 @@ function! previm#options()
   \   'autoClose': get(g:, 'previm_auto_close', 0),
   \   'showCodeLanguage': get(g:, 'previm_code_language_show', 0),
   \   'codeLanguageSeparator': get(g:, 'previm_code_language_separator', '[\s:]+'),
+  \   'baseUrl': previm#base_url(),
   \ })
 endfunction
 
